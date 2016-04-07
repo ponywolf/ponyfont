@@ -122,6 +122,10 @@ function M.newText(options)
   end  
   instance.bitmapFont = M.cache[fontFile]
 
+  -- Brand-spanking new render code with scaling to fontSize,
+  -- word wrapping to width and general performance and 
+  -- readability updates
+
   function instance:render()
     local text = self.text
     local font = self.bitmapFont
@@ -133,8 +137,8 @@ function M.newText(options)
 
     -- locals
     local x, y = 0, 0
-    local last = '', 0, 0
-    local lastWord, lastX = 0, 0
+    local last = ''
+    local lastWord = 0, 0
 
     if text then
       for chr in string.gmatch(text..'\n', '(.)') do
@@ -153,22 +157,28 @@ function M.newText(options)
             glyph.yScale = scale
             glyph._x = glyph.x - self.x -- orginal offset from self's x
             glyph._y = glyph.y - self.y -- orginal offset from self's y 
-            self:insert(glyph)
+            glyph.chr = chr
             last = chr
             lastWord = lastWord + 1
+            self:insert(glyph)          
           elseif chr==' ' then
             lastWord = 0 -- save x of last word
-            lastX = x
           end
           x = x + font.chars[chr].xadvance
---          if self.maxWidth and x > self.maxWidth then
---            x = 0; y = y + info.lineHeight
---            for i = self.numChildren - lastWord, self.numChildren do
---              self[i].x, self[i].y = x, y
---              self[i]._x = self[i].x - self.x -- orginal offset from self's x
---              self[i]._y = self[i].y - self.y -- orginal offset from self's y 
---            end
---          end
+          if self.maxWidth and (x * scale) > self.maxWidth then
+            print ("Wrap at", x, "number of chars", lastWord)
+            x = 0; y = y + info.lineHeight
+            for i = self.numChildren - lastWord + 1, self.numChildren do
+              local glyph = self[i]
+              glyph.x = scale * (font.chars[chr].xoffset + x)
+              glyph.y = scale * (font.chars[chr].yoffset + y)
+              glyph.xScale = scale
+              glyph.yScale = scale
+              glyph._x = glyph.x - self.x -- orginal offset from self's x
+              glyph._y = glyph.y - self.y -- orginal offset from self's y 
+              x = x + font.chars[glyph.chr].xadvance
+            end
+          end
         end
       end
     end
@@ -226,7 +236,7 @@ function M.newText(options)
     self:removeEventListener("propertyUpdate")
   end
 
--- set options
+  -- set options
   instance.align = options.align or "left"
   instance.fontSize = options.fontSize or 24
   instance.x = options.x or 0
