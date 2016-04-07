@@ -35,4 +35,6 @@ String. This specifies the alignment of the text when a width parameter is suppl
 Examples
 ---------
 
+>ponyfont = "com.ponywolf.ponyfont"
+
 Many of the [CoronaSDK text examples](https://docs.coronalabs.com/api/library/display/newText.html) run as-is, by simply replacing the font parameter with the sample FNT/PNG included in this repository.
