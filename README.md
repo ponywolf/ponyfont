@@ -5,6 +5,7 @@ Bitmap fonts consist of two files, a PNG texture and a FNT file that describes t
 There are many partial attempts of a BMF importer, but most rely on deprecated functionality and require additional code to integrate. The goal of **ponyfont** is to have a replacement for display.newText() with similar arguments and rendering.
 
 ![alt text](https://raw.githubusercontent.com/ponywolf/ponyfont/master/ponyfont-gif-preview.gif "Ponyfont in action")
+
 *In this example, a bitmap font is shown side by side with it's TrueType counterpart. Size, placement and word wrap are all consistent.*
 
 Syntax
