@@ -6,24 +6,27 @@
 
 -- Your code here
 
-bmpFont = require "com.ponywolf.ponyfont"
+local ponyfont = require "com.ponywolf.ponyfont"
 
 display.setDefault("background", 0.4,0.4,0.4)
 
 local options = {
-    text = "Hello World, it's nice here.",     
+    text = "Hello World, it's nice here. I'd love to stay a while...",     
     x = display.contentCenterX,
-    y = display.contentCenterY,
-    width = display.contentCenterX,
+    y = display.contentCenterY - 150,
+    width = 500,
     font = "fonts/WalterTurncoat.fnt",
-    fontSize = 48,
+    fontSize = 52,
     align = "left",
 }
 
-local bmpText = bmpFont.newText(options)
+local bmpText = ponyfont.newText(options)
 
---bmpText.text = "Updated text"
+for i = 1, bmpText.numChildren do
+  transition.from ( bmpText[i], { delay = 300 + (i*25), time = 250, xScale = 2, yScale = 2, alpha = 0, transition = easing.outBounce })
+end
 
 options.font = "fonts/WalterTurncoat.ttf"
+options.y = display.contentCenterY + 150
+
 local ttfText = display.newText(options)
-ttfText.alpha = 0.5
