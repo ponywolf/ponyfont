@@ -114,8 +114,6 @@ function M.newText(options)
 
   -- create displayGroup instance
   local instance = display.newGroup()
-  --instance.anchorChildren = true
-
 
   -- load font if not in cache
   local fontFile = options.font or "default"
@@ -128,6 +126,56 @@ function M.newText(options)
   -- word wrapping to width and general performance and 
   -- readability updates
 
+  function instance:anchor()
+    local w,h = self._width or self.contentWidth, self.contentHeight
+    local x,y = self.anchorX or 0.5, self.anchorY or 0.5
+    for i = self.numChildren, 1, -1 do
+      if self[i]._x and self[i]._y then
+        self[i].x = self[i]._x
+        self[i].y = self[i]._y
+        self[i]:translate(-w * x, -h * y)
+      end
+    end
+    self.anchorX, self.anchorY = x, y
+  end
+
+  function instance:justify(align)
+    if not self._width then return false end
+    -- grab first letter
+    local letter = self[1]
+    if not letter then return false end
+
+    -- default
+    align = self.align or "left"
+    local x, last, lastX, w = 0, 1, letter.x, self._width
+
+    -- push stuff around
+    if self.align == "right" or self.align == "center" then 
+      for i = 1, self.numChildren do
+        if self[i]._x and self[i]._y then        
+          self[i].x = self[i]._x
+          x = self[i].contentBounds.xMax
+          if (x < lastX) or (i == self.numChildren) then -- wrapped
+            -- diff is based on assigned width
+            local diff = (w - lastX)
+            if align == "right" then 
+              diff = diff + w/2
+            elseif align == "center" then 
+              diff = diff * 0.5
+            else
+              diff = 0
+            end
+            for j = last, i-((i == self.numChildren) and 0 or 1) do
+              self[j]:translate(diff,0)
+            end
+            last = i
+          end
+          lastX = x
+        end
+      end
+    end
+  end
+
   function instance:render()
     local text = self.text
     local font = self.bitmapFont
@@ -135,7 +183,13 @@ function M.newText(options)
     local scale = self.fontSize / info.size
 
     -- clear previous text
-    for i = self.numChildren, 1, -1 do display.remove(self[i]) end
+    for i = self.numChildren, 1, -1 do 
+      display.remove(self[i])
+    end
+    
+    -- store our position
+    self._x, self._y = self.x, self.y
+    self.x, self.y = 0, 0
 
     -- locals
     local x, y = 0, 0
@@ -191,75 +245,31 @@ function M.newText(options)
         end
       end
     end
-  end
-
-  function instance:anchor()
-    local w,h = self._width or self.contentWidth, self.contentHeight
-    local x,y = self.anchorX or 0.5, self.anchorY or 0.5
-    for i = self.numChildren, 1, -1 do
-      if self[i]._x and self[i]._y then
-        self[i].x = self[i]._x
-        self[i].y = self[i]._y
-        self[i]:translate(-w * x, -h * y)
-      end
-    end
-    self.anchorX, self.anchorY = x, y
-  end
-
-  function instance:justify(align)
-    if not self._width then return false end
-    -- Grab first letter
-    local letter = self[1]
-    if not letter then return false end
-    
-    -- Default
-    align = self.align or "left"
-    local x, last, lastX, w = 0, 1, letter.x, self._width
-    
-    -- Re-anchor
-    self:anchor()
-    
-    -- Push stuff around
-    if self.align == "right" or self.align == "center" then 
-      for i = 1, self.numChildren do
-        if self[i]._x and self[i]._y then        
-          self[i].x = self[i]._x
-          x = self[i].contentBounds.xMax
-          if (x < lastX) or (i == self.numChildren) then -- wrapped
-            -- diff is based on assigned width
-            local diff = (w - lastX)
-            if align == "right" then 
-              diff = diff + w/2
-            elseif align == "center" then 
-              diff = diff * 0.5
-            else
-              diff = 0
-            end
-            for j = last, i-((i == self.numChildren) and 0 or 1) do
-              self[j]:translate(diff,0)
-            end
-            last = i
-          end
-          lastX = x
-        end
-      end
-    end
+    self.x, self.y = self._x, self._y        
+    self:anchor()    
+    self:justify()  
   end
 
   instance = addPropertyUpdate(instance)
   function instance:propertyUpdate( event )
     if event.key == "text" then
       self.text = event.value
-      self:render()
+      self:render()    
     elseif event.key == "anchorX" then
       self.anchorX = event.value
-      self:anchor()        
+      self:render()
     elseif event.key == "anchorY" then
       self.anchorY = event.value
-      self:anchor()    
+      self:render()
     elseif event.key == "align" then
       self.align = event.value
-      self:justify()
+      self:render()
+    elseif event.key == "fontSize" then
+      self.fontSize = event.value
+      self:render()
+    elseif event.key == "width" then
+      self._width = event.value
+      self:render()    
     end
   end
 
@@ -275,12 +285,11 @@ function M.newText(options)
   instance._width = options.width
   instance.text = options.text
   instance:render()
-  instance:justify(options.align)  
-  
+
   -- add listeners
   instance:addEventListener( "propertyUpdate" )
   instance:addEventListener( "finalize" )
-  
+
   return instance
 
 end
