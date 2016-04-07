@@ -114,6 +114,8 @@ function M.newText(options)
 
   -- create displayGroup instance
   local instance = display.newGroup()
+  --instance.anchorChildren = true
+
 
   -- load font if not in cache
   local fontFile = options.font or "default"
@@ -138,45 +140,52 @@ function M.newText(options)
     -- locals
     local x, y = 0, 0
     local last = ''
-    local lastWord = 0, 0
+    local lastWord = 0
+
+    local function kern(x, pair)
+      if font.kernings[pair] then
+        x = x + font.kernings[pair]
+      end
+      return x
+    end
 
     if text then
-      for chr in string.gmatch(text..'\n', '(.)') do
-        if chr == '\n' then -- newline
+      for letter in string.gmatch(text..'\n', '(.)') do
+        if letter == '\n' then -- newline
           x = 0; y = y + info.lineHeight
-        elseif font.chars[chr] then
-          if tonumber(font.chars[chr].width) > 0 and tonumber(font.chars[chr].height) > 0 then
-            local glyph = display.newImage(font.spritesheets[font.sprites[chr].spritesheet].sheet, font.sprites[chr].frame)
-            glyph.anchorX, glyph.anchorY = 0, 0
-            if font.kernings[last .. chr] then
-              x = x + font.kernings[last .. chr]
-            end
-            glyph.x = scale * (font.chars[chr].xoffset + x)
-            glyph.y = scale * (font.chars[chr].yoffset + y)
+        elseif font.chars[letter] then
+          if tonumber(font.chars[letter].width) > 0 and tonumber(font.chars[letter].height) > 0 then
+            local glyph = display.newImage(font.spritesheets[font.sprites[letter].spritesheet].sheet, font.sprites[letter].frame)
+            x = kern(x, last .. letter)
+            glyph.anchorX, glyph.anchorY = 0, 0            
+            glyph.x = scale * (font.chars[letter].xoffset + x)
+            glyph.y = scale * (font.chars[letter].yoffset + y)
             glyph.xScale = scale
             glyph.yScale = scale
-            glyph._x = glyph.x - self.x -- orginal offset from self's x
-            glyph._y = glyph.y - self.y -- orginal offset from self's y 
-            glyph.chr = chr
-            last = chr
+            glyph._x = glyph.x -- orginal offset from self's x
+            glyph._y = glyph.y -- orginal offset from self's y 
+            glyph.chr = letter
+            last = letter
             lastWord = lastWord + 1
             self:insert(glyph)          
-          elseif chr==' ' then
+          elseif letter==' ' then
             lastWord = 0 -- save x of last word
           end
-          x = x + font.chars[chr].xadvance
-          if self.maxWidth and (x * scale) > self.maxWidth then
-            print ("Wrap at", x, "number of chars", lastWord)
+          x = x + font.chars[letter].xadvance
+          if self._width and (x * scale) > self._width then
             x = 0; y = y + info.lineHeight
             for i = self.numChildren - lastWord + 1, self.numChildren do
               local glyph = self[i]
-              glyph.x = scale * (font.chars[chr].xoffset + x)
-              glyph.y = scale * (font.chars[chr].yoffset + y)
+              local wrapped = glyph.chr
+              x = kern(x, last .. wrapped)
+              glyph.x = scale * (font.chars[wrapped].xoffset + x)
+              glyph.y = scale * (font.chars[wrapped].yoffset + y)
               glyph.xScale = scale
               glyph.yScale = scale
-              glyph._x = glyph.x - self.x -- orginal offset from self's x
-              glyph._y = glyph.y - self.y -- orginal offset from self's y 
-              x = x + font.chars[glyph.chr].xadvance
+              glyph._x = glyph.x -- orginal offset from self's x
+              glyph._y = glyph.y -- orginal offset from self's y 
+              x = x + font.chars[wrapped].xadvance
+              last = wrapped
             end
           end
         end
@@ -184,51 +193,73 @@ function M.newText(options)
     end
   end
 
-  function instance:anchor(x,y)
-    local w,h = self.contentWidth, self.contentHeight
-    x,y = x or self.anchorX or 0.5, y or self.anchorY or 0.5
+  function instance:anchor()
+    local w,h = self._width or self.contentWidth, self.contentHeight
+    local x,y = self.anchorX or 0.5, self.anchorY or 0.5
     for i = self.numChildren, 1, -1 do
-      self[i].x = self.x + self[i]._x
-      self[i].y = self.y + self[i]._y
-      self[i].x = self[i].x - w * x
-      self[i].y = self[i].y - h * y
+      if self[i]._x and self[i]._y then
+        self[i].x = self[i]._x
+        self[i].y = self[i]._y
+        self[i]:translate(-w * x, -h * y)
+      end
     end
-    self.anchorX, self.anchorY = x,y
+    self.anchorX, self.anchorY = x, y
   end
 
---  function instance:realign()
---    local groupRight = self.contentBounds.xMax
---    local right = instance[i].contentBounds.xMax
---    local groupLeft = self.contentBounds.xMax
---    local left = instance[i].contentBounds.xMax
---    local diff
---    if self.align == "right" then
---      diff = groupRight - right
---    elseif self.align == "center" then
---      diff = 0.5 * (groupRight - right)
---    end 
---    for i = instance.numChildren, 1, -1 do
---      self[i].x = self.x + self[i]._x
---      self[i].y = self.y + self[i]._y
---      self[i].x = self[i].x + diff      
---    end
---  end
+  function instance:justify(align)
+    if not self._width then return false end
+    -- Grab first letter
+    local letter = self[1]
+    if not letter then return false end
+    
+    -- Default
+    align = self.align or "left"
+    local x, last, lastX, w = 0, 1, letter.x, self._width
+    
+    -- Re-anchor
+    self:anchor()
+    
+    -- Push stuff around
+    if self.align == "right" or self.align == "center" then 
+      for i = 1, self.numChildren do
+        if self[i]._x and self[i]._y then        
+          self[i].x = self[i]._x
+          x = self[i].contentBounds.xMax
+          if (x < lastX) or (i == self.numChildren) then -- wrapped
+            -- diff is based on assigned width
+            local diff = (w - lastX)
+            if align == "right" then 
+              diff = diff + w/2
+            elseif align == "center" then 
+              diff = diff * 0.5
+            else
+              diff = 0
+            end
+            for j = last, i-((i == self.numChildren) and 0 or 1) do
+              self[j]:translate(diff,0)
+            end
+            last = i
+          end
+          lastX = x
+        end
+      end
+    end
+  end
 
   instance = addPropertyUpdate(instance)
   function instance:propertyUpdate( event )
     if event.key == "text" then
       self.text = event.value
       self:render()
-      self:anchor()
     elseif event.key == "anchorX" then
       self.anchorX = event.value
-      self:anchor()
+      self:anchor()        
     elseif event.key == "anchorY" then
       self.anchorY = event.value
-      self:anchor()
---    elseif event.key == "align" then
---      self.align = event.value
---      self:realign()
+      self:anchor()    
+    elseif event.key == "align" then
+      self.align = event.value
+      self:justify()
     end
   end
 
@@ -241,13 +272,15 @@ function M.newText(options)
   instance.fontSize = options.fontSize or 24
   instance.x = options.x or 0
   instance.y = options.y or 0
-  instance.maxWidth = options.width
+  instance._width = options.width
   instance.text = options.text
   instance:render()
-  instance:anchor()
-
+  instance:justify(options.align)  
+  
+  -- add listeners
   instance:addEventListener( "propertyUpdate" )
   instance:addEventListener( "finalize" )
+  
   return instance
 
 end
