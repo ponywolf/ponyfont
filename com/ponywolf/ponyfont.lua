@@ -1,9 +1,16 @@
--- ponyfont 0.1
+-- ponyfont 0.2
 
 -- A bitmap font loader/render for CoronaSDK
 
 local M = {}
 M.cache = {} -- cache for loaded fonts
+
+
+-- If you will UTF-8 characters, you will need to add this plugin to your
+-- build settings
+-- https://docs.coronalabs.com/plugin/utf8/index.html
+
+local utf8 = require( "plugin.utf8" )
 
 -- property update events by Jonathan Beebe
 -- https://coronalabs.com/blog/2012/05/01/tutorial-property-callbacks/
@@ -84,7 +91,11 @@ function M.newText(options)
       elseif tag == 'page' then
         font.spritesheets[1 + t.id] = { file = t.file, frames = {} }
       elseif tag == 'char' then
-        t.letter = string.char(t.id)
+        if tonumber(t.id) > 255 then
+          t.letter = utf8.char(t.id)        
+        else
+          t.letter = string.char(t.id)
+        end
         font.chars[t.letter] = {}
         for k, v in pairs(t) do font.chars[t.letter][k] = v end
         if 0 + font.chars[t.letter].width > 0 and 0 + font.chars[t.letter].height > 0 then
@@ -113,7 +124,7 @@ function M.newText(options)
   end
 
   -- create displayGroup instance
-  local instance = display.newGroup()
+  local instance = options.parent and display.newGroup(options.parent) or display.newGroup()
 
   -- load font if not in cache
   local fontFile = options.font or "default"
@@ -186,7 +197,7 @@ function M.newText(options)
     for i = self.numChildren, 1, -1 do 
       display.remove(self[i])
     end
-    
+
     -- store our position
     self._x, self._y = self.x, self.y
     self.x, self.y = 0, 0
