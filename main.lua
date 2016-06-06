@@ -18,17 +18,18 @@ options = {
   width = 500,
   font = "fonts/Orienta-Regular.fnt",
   fontSize = 52,
-  align = "left",
+  align = "center",
 }
 
 -- Uses pretty much the same options as display.newText
 local bmpText = ponyfont.newText(options)
+display.getCurrentStage():insert(bmpText.raw)
 
 -- You can set the properties without calling any update() function
 -- uncomment the lines below to see how the text reacts
---bmpText.text = "This is updated text in the same displayOject..."
---bmpText.fontSize = 60
---bmpText.align = "right"
+bmpText.text = "This is updated text in the same displayObject..."
+bmpText.fontSize = 60
+bmpText.align = "center"
 
 -- Demo looping through each letter
 for i = 1, bmpText.numChildren do
@@ -43,7 +44,7 @@ options = {
   width = 500,
   font = "fonts/Orienta-Regular.ttf", -- this
   fontSize = 52,
-  align = "left",
+  align = "center",
 }
 
 local ttfText = display.newText(options)

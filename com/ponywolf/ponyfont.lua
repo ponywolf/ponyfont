@@ -1,4 +1,4 @@
--- ponyfont 0.2
+-- ponyfont 0.3
 
 -- A bitmap font loader/render for CoronaSDK
 
@@ -10,19 +10,19 @@ M.cache = {} -- cache for loaded fonts
 -- build settings
 -- https://docs.coronalabs.com/plugin/utf8/index.html
 
-local utf8 = require( "plugin.utf8" )
+local utf8 = require("plugin.utf8") -- or require("lua-utf8") via luarocks 
 
 -- property update events by Jonathan Beebe
 -- https://coronalabs.com/blog/2012/05/01/tutorial-property-callbacks/
 
-local function addPropertyUpdate( obj )
+local function addPropertyUpdate(obj)
   local t = {}
   t.raw = obj
 
   local mt = {
-    __index = function(tb,k)
+    __index = function(_,k)
       if k == "raw" then
-        return rawget( t, "raw" )
+        return rawget(t, "raw")
       end
 
       -- pass method and property requests to the display object
@@ -41,13 +41,13 @@ local function addPropertyUpdate( obj )
         key=k,
         value=v
       }
-      obj:dispatchEvent( event )
+      obj:dispatchEvent(event)
 
       -- update the property on the display object
       obj[k] = v
     end
   }
-  setmetatable( t, mt )
+  setmetatable(t, mt)
   return t
 end
 
@@ -147,7 +147,6 @@ function M.newText(options)
         self[i]:translate(-w * x, -h * y)
       end
     end
-    self.anchorX, self.anchorY = x, y
   end
 
   function instance:justify(align)
@@ -258,30 +257,25 @@ function M.newText(options)
     end
     self.x, self.y = self._x, self._y        
     self:anchor()    
-    self:justify()  
+    self:justify()    
   end
 
   instance = addPropertyUpdate(instance)
-  function instance:propertyUpdate( event )
+  function instance:propertyUpdate(event)
     if event.key == "text" then
       self.text = event.value
-      self:render()    
     elseif event.key == "anchorX" then
       self.anchorX = event.value
-      self:render()
     elseif event.key == "anchorY" then
       self.anchorY = event.value
-      self:render()
     elseif event.key == "align" then
       self.align = event.value
-      self:render()
     elseif event.key == "fontSize" then
       self.fontSize = event.value
-      self:render()
     elseif event.key == "width" then
       self._width = event.value
-      self:render()    
     end
+    self:render()    
   end
 
   function instance:finalize(event)
@@ -298,8 +292,8 @@ function M.newText(options)
   instance:render()
 
   -- add listeners
-  instance:addEventListener( "propertyUpdate" )
-  instance:addEventListener( "finalize" )
+  instance:addEventListener("propertyUpdate")
+  instance:addEventListener("finalize")
 
   return instance
 
