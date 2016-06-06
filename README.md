@@ -10,6 +10,7 @@ There are many partial attempts of a BMF importer, but most rely on deprecated f
 
 Syntax
 ----------
+>ponyfont = require "com.ponywolf.ponyfont"
 >ponyfont.newText( options )
 
 This function takes a single argument, options, which is a table that accepts the following parameters:
@@ -34,7 +35,5 @@ String. This specifies the alignment of the text when a width parameter is suppl
 
 Examples
 ---------
-
->ponyfont = require "com.ponywolf.ponyfont"
 
 Many of the [CoronaSDK text examples](https://docs.coronalabs.com/api/library/display/newText.html) run as-is, by simply replacing the font parameter with the sample FNT/PNG included in this repository.
