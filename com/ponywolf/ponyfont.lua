@@ -125,6 +125,7 @@ function M.newText(options)
 
   -- create displayGroup instance
   local instance = options.parent and display.newGroup(options.parent) or display.newGroup()
+  -- instance.anchorChildren = true
 
   -- load font if not in cache
   local fontFile = options.font or "default"
@@ -197,10 +198,6 @@ function M.newText(options)
       display.remove(self[i])
     end
 
-    -- store our position
-    self._x, self._y = self.x, self.y
-    self.x, self.y = 0, 0
-
     -- locals
     local x, y = 0, 0
     local last = ''
@@ -233,6 +230,7 @@ function M.newText(options)
             lastWord = lastWord + 1
             self:insert(glyph)          
           elseif letter==' ' then
+            print (lastWord)
             lastWord = 0 -- save x of last word
           end
           x = x + font.chars[letter].xadvance
@@ -255,7 +253,6 @@ function M.newText(options)
         end
       end
     end
-    self.x, self.y = self._x, self._y        
     self:anchor()    
     self:justify()    
   end
@@ -264,18 +261,29 @@ function M.newText(options)
   function instance:propertyUpdate(event)
     if event.key == "text" then
       self.text = event.value
+      self:render()    
     elseif event.key == "anchorX" then
       self.anchorX = event.value
+      self:anchor()
     elseif event.key == "anchorY" then
       self.anchorY = event.value
+      self:anchor()    
     elseif event.key == "align" then
       self.align = event.value
+      self:justify()      
     elseif event.key == "fontSize" then
       self.fontSize = event.value
+      self:render()       
     elseif event.key == "width" then
       self._width = event.value
+      self:render()     
+    elseif event.key == "x" then
+      self._x = event.value
+      self.x = self._x
+    elseif event.key == "y" then
+      self._y = event.value
+      self.x = self._y
     end
-    self:render()    
   end
 
   function instance:finalize(event)
@@ -287,6 +295,7 @@ function M.newText(options)
   instance.fontSize = options.fontSize or 24
   instance.x = options.x or 0
   instance.y = options.y or 0
+  instance._x, instance._y = instance.x, instance.y
   instance._width = options.width
   instance.text = options.text
   instance:render()
