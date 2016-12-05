@@ -230,7 +230,7 @@ function M.newText(options)
             lastWord = lastWord + 1
             self:insert(glyph)          
           elseif letter==' ' then
-            print (lastWord)
+            --print (lastWord)
             lastWord = 0 -- save x of last word
           end
           x = x + font.chars[letter].xadvance
