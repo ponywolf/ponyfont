@@ -11,7 +11,8 @@ There are many partial attempts of a BMF importer, but most rely on deprecated f
 Syntax
 ----------
 >ponyfont = require "com.ponywolf.ponyfont"
->ponyfont.newText( options )
+
+>local text = ponyfont.newText( options )
 
 This function takes a single argument, options, which is a table that accepts the following parameters:
 
