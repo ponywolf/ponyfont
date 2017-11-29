@@ -6,7 +6,7 @@ local M = {}
 M.cache = {} -- cache for loaded fonts
 
 
--- If you will UTF-8 characters, you will need to add this plugin to your
+-- If you use UTF-8 characters, you will need to add this plugin to your
 -- build settings
 -- https://docs.coronalabs.com/plugin/utf8/index.html
 
