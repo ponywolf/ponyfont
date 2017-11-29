@@ -282,7 +282,7 @@ function M.newText(options)
       self.x = self._x
     elseif event.key == "y" then
       self._y = event.value
-      self.x = self._y
+      self.y = self._y
     end
   end
 
