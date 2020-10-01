@@ -1,4 +1,4 @@
-**ponyfont**  -- Modern Bitmap Font Support for Corona SDK
+**ponyfont**  -- Modern Bitmap Font Support for Solar 2d (formerly CoronaSDK)
 ====
 Bitmap fonts consist of two files, a PNG texture and a FNT file that describes the glyphs size and placement. This module reads an [Angel Code](http://www.angelcode.com/products/bmfont/) or [ShoeBox](http://renderhjs.net/shoebox/bitmapFont.htm) compatible FNT bitmap font and corresponding PNG texture and returns a displayGroup with each letter in order as the children of that display group. It also monitors properties like text, align, fontSize for changes and re-renders accordingly.
 
@@ -29,7 +29,7 @@ Number. Optional parameters to enable multi-line text. Text will be wrapped at w
 String. Name of the font file that contains the Angel Code FNT file. The module will look for the PNG textures specified in that FNT file in the same directory as the FNT file.
 
 **fontSize** (optional)
-Number. The size of the text in Corona content points. The module will scale the glyphs to match the font size as similarly as possible. This may lead to blurry text if the texture is not significantly large enough to support the type size.
+Number. The size of the text in Solar2D content points. The module will scale the glyphs to match the font size as similarly as possible. This may lead to blurry text if the texture is not significantly large enough to support the type size.
 
 **align** (optional)
 String. This specifies the alignment of the text when a width parameter is supplied. Default value is "left". Valid values are "left", "center", or "right". See the code examples below.
@@ -37,4 +37,4 @@ String. This specifies the alignment of the text when a width parameter is suppl
 Examples
 ---------
 
-Many of the [CoronaSDK text examples](https://docs.coronalabs.com/api/library/display/newText.html) run as-is, by simply replacing the font parameter with the sample FNT/PNG included in this repository.
+Many of the [Solar2D text examples](https://docs.coronalabs.com/api/library/display/newText.html) run as-is, by simply replacing the font parameter with the sample FNT/PNG included in this repository.

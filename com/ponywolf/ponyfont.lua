@@ -3,14 +3,14 @@
 -- A bitmap font loader/render for CoronaSDK
 
 local M = {}
-M.cache = {} -- cache for loaded fonts
+local cache = {} -- cache for loaded fonts
 
 
 -- If you use UTF-8 characters, you will need to add this plugin to your
 -- build settings
 -- https://docs.coronalabs.com/plugin/utf8/index.html
 
-local utf8 = require("plugin.utf8") -- or require("lua-utf8") via luarocks 
+local utf8 = require("plugin.utf8") -- or require("lua-utf8") via luarocks
 
 -- property update events by Jonathan Beebe
 -- https://coronalabs.com/blog/2012/05/01/tutorial-property-callbacks/
@@ -92,7 +92,7 @@ function M.newText(options)
         font.spritesheets[1 + t.id] = { file = t.file, frames = {} }
       elseif tag == 'char' then
         if tonumber(t.id) > 255 then
-          t.letter = utf8.char(t.id)        
+          t.letter = utf8.char(t.id)
         else
           t.letter = string.char(t.id)
         end
@@ -128,13 +128,13 @@ function M.newText(options)
 
   -- load font if not in cache
   local fontFile = options.font or "default"
-  if not M.cache[fontFile] then
-    M.cache[fontFile] = loadFont(fontFile)
-  end  
-  instance.bitmapFont = M.cache[fontFile]
+  if not cache[fontFile] then
+    cache[fontFile] = loadFont(fontFile)
+  end
+  instance.bitmapFont = cache[fontFile]
 
   -- Brand-spanking new render code with scaling to fontSize,
-  -- word wrapping to width and general performance and 
+  -- word wrapping to width and general performance and
   -- readability updates
 
   function instance:anchor()
@@ -161,22 +161,22 @@ function M.newText(options)
 
     -- push stuff around
     for i = 1, self.numChildren do
-      if self[i]._x and self[i]._y then        
+      if self[i]._x and self[i]._y then
         x = self[i].x + self[i].width
         if (x < lastX) or (i == self.numChildren) then -- wrapped
           -- diff is based on assigned width
           local diff = w - lastX
-          if align == "right" then 
+          if align == "right" then
             diff = diff - w/2
-          elseif align == "center" then 
-            diff = (diff * 0.5) - w/4 
+          elseif align == "center" then
+            diff = (diff * 0.5) - w/4
           else
             diff = 0
           end
           for j = last, i-((i == self.numChildren) and 0 or 1) do
             self[j]:translate(diff,0)
             self[i].xScale = self[i]._xScale
-            self[i].yScale = self[i]._yScale              
+            self[i].yScale = self[i]._yScale
           end
           last = i
         end
@@ -192,7 +192,7 @@ function M.newText(options)
     local scale = self.fontSize / info.size
 
     -- clear previous text
-    for i = self.numChildren, 1, -1 do 
+    for i = self.numChildren, 1, -1 do
       display.remove(self[i])
     end
 
@@ -211,24 +211,24 @@ function M.newText(options)
     if text then
       for letter in string.gmatch(text..'\n', '(.)') do
         if letter == '\n' then -- newline
-          x = 0; y = y + info.lineHeight
+          x, y = 0, y + info.lineHeight
         elseif font.chars[letter] then
           if tonumber(font.chars[letter].width) > 0 and tonumber(font.chars[letter].height) > 0 then
             local glyph = display.newImage(font.spritesheets[font.sprites[letter].spritesheet].sheet, font.sprites[letter].frame)
             x = kern(x, last .. letter)
-            glyph.anchorX, glyph.anchorY = 0, 0            
+            glyph.anchorX, glyph.anchorY = 0, 0
             glyph.xScale = scale
-            glyph.yScale = scale            
+            glyph.yScale = scale
             glyph.x = scale * (font.chars[letter].xoffset + x)
             glyph.y = scale * (font.chars[letter].yoffset + y)
             glyph._x = glyph.x -- orginal offset from self's x
-            glyph._y = glyph.y -- orginal offset from self's y 
+            glyph._y = glyph.y -- orginal offset from self's y
             glyph._xScale = glyph.xScale
-            glyph._yScale = glyph.yScale   
+            glyph._yScale = glyph.yScale
             glyph.chr = letter
             last = letter
             lastWord = lastWord + 1
-            self:insert(glyph)          
+            self:insert(glyph)
           elseif letter==' ' then
             --print (lastWord)
             lastWord = 0 -- save x of last word
@@ -245,7 +245,7 @@ function M.newText(options)
               glyph.xScale = scale
               glyph.yScale = scale
               glyph._x = glyph.x -- orginal offset from self's x
-              glyph._y = glyph.y -- orginal offset from self's y 
+              glyph._y = glyph.y -- orginal offset from self's y
               x = x + font.chars[wrapped].xadvance
               last = wrapped
             end
@@ -253,30 +253,30 @@ function M.newText(options)
         end
       end
     end
-    self:anchor()    
-    self:justify()    
+    self:anchor()
+    self:justify()
   end
 
   instance = addPropertyUpdate(instance)
   function instance:propertyUpdate(event)
     if event.key == "text" then
       self.text = event.value
-      self:render()    
+      self:render()
     elseif event.key == "anchorX" then
       self.anchorX = event.value
       self:anchor()
     elseif event.key == "anchorY" then
       self.anchorY = event.value
-      self:anchor()    
+      self:anchor()
     elseif event.key == "align" then
       self.align = event.value
-      self:justify()      
+      self:justify()
     elseif event.key == "fontSize" then
       self.fontSize = event.value
-      self:render()       
+      self:render()
     elseif event.key == "width" then
       self._width = event.value
-      self:render()     
+      self:render()
     elseif event.key == "x" then
       self._x = event.value
       self.x = self._x
